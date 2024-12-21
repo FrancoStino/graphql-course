@@ -1,12 +1,29 @@
-import myCurrentLocation, { getGreeting, message, name } from './myModule';
+import { createServer } from 'node:http';
+import { createSchema, createYoga } from 'graphql-yoga';
 
-console.log(message);
-console.log(name);
-console.log(myCurrentLocation);
-console.log(getGreeting('Jessica'));
+const yoga = createYoga({
+    schema: createSchema({
+        typeDefs: /* GraphQL */ `
+            type Query {
+                hello: String!
+                name: String!
+                location: String!
+                bio: String!
+            }
+        `,
+        resolvers: {
+            Query: {
+                hello: () => 'This is my first query!',
+                name: () => 'John Doe',
+                location: () => 'New York',
+                bio: () => 'I am a software engineer',
+            },
+        },
+    }),
+});
 
-// 1. Import add and subtract from math.js
+const server = createServer(yoga);
 
-import myAddFunction, { subtract } from './math';
-console.log(myAddFunction(1, 2));
-console.log(subtract(1, 2));
+server.listen(4000, () => {
+    console.info('Server is running on http://localhost:4000/graphql');
+});
