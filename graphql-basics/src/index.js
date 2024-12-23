@@ -8,20 +8,20 @@ const yoga = createYoga({
     schema: createSchema({
         typeDefs: /* GraphQL */ `
             type Query {
-                id: ID!
-                name: String!
-                age: Int!
-                employed: Boolean!
-                gpa: Float
+                title: String!
+                price: Float!
+                releaseYear: Int
+                rating: Float
+                inStock: Boolean!
             }
         `,
         resolvers: {
             Query: {
-                id: () => 'abc123',
-                name: () => 'Davide Ladisa',
-                age: () => 30,
-                employed: () => true,
-                gpa: () => 3.01,
+                title: () => 'The Lord of the Rings: The Fellowship of the Ring',
+                price: () => 19.99,
+                releaseYear: () => 2001,
+                rating: () => 8.8,
+                inStock: () => true,
             },
         },
     }),
