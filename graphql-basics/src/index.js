@@ -9,12 +9,19 @@ const yoga = createYoga({
         typeDefs: /* GraphQL */ `
             type Query {
                 me: User!
+                post: Post!
             }
             type User {
                 id: ID!
                 name: String!
                 email: String!
                 age: Int
+            }
+            type Post {
+                id: ID!
+                title: String!
+                body: String!
+                published: Boolean!
             }
         `,
         resolvers: {
@@ -25,6 +32,14 @@ const yoga = createYoga({
                         name: 'Davide',
                         email: 'info@davideladisa.it',
                         age: 28,
+                    };
+                },
+                post() {
+                    return {
+                        id: '1',
+                        title: 'Hello World',
+                        body: 'This is a post',
+                        published: true,
                     };
                 },
             },
