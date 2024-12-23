@@ -8,6 +8,7 @@ const yoga = createYoga({
     schema: createSchema({
         typeDefs: /* GraphQL */ `
             type Query {
+                greeting(name: String, position: String): String!
                 me: User!
                 post: Post!
             }
@@ -26,6 +27,13 @@ const yoga = createYoga({
         `,
         resolvers: {
             Query: {
+                greeting(parent, args, ctx, info) {
+                    if (args.name && args.position) {
+                        return `Hello, ${args.name}! You are my favorite ${args.position}.`;
+                    } else {
+                        return 'Hello!';
+                    }
+                },
                 me: () => {
                     return {
                         id: '7',
