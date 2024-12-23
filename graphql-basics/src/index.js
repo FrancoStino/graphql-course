@@ -14,6 +14,7 @@ const yoga = createYoga({
             type Query {
                 add(a: Float!, b: Float!): Float!
                 greeting(name: String, position: String): String!
+                grades: [Int!]!
                 me: User!
                 post: Post!
             }
@@ -43,6 +44,9 @@ const yoga = createYoga({
                     } else {
                         return 'Hello!';
                     }
+                },
+                grades() {
+                    return [99, 80, 93];
                 },
                 me: () => {
                     return {
