@@ -4,10 +4,15 @@ import { createSchema, createYoga } from 'graphql-yoga';
 // Scalar Types - String, int, float, boolean, ID
 
 // Create a Yoga instance with a GraphQL schema
+
+// 1. Create an "add" query that returns a float
+// 2. Set up "add" to take two arguments (a, b) which are required floats
+// 3. Have the resolver send back the sum of the two arguments
 const yoga = createYoga({
     schema: createSchema({
         typeDefs: /* GraphQL */ `
             type Query {
+                add(a: Float!, b: Float!): Float!
                 greeting(name: String, position: String): String!
                 me: User!
                 post: Post!
@@ -27,6 +32,11 @@ const yoga = createYoga({
         `,
         resolvers: {
             Query: {
+                add(parent, args, ctx, info) {
+                    if (args.a && args.b) {
+                        return args.a + args.b;
+                    }
+                },
                 greeting(parent, args, ctx, info) {
                     if (args.name && args.position) {
                         return `Hello, ${args.name}! You are my favorite ${args.position}.`;
