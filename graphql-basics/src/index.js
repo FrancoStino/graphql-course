@@ -1,27 +1,27 @@
 import { createServer } from 'node:http';
 import { createSchema, createYoga } from 'graphql-yoga';
 
+// Scalar Types - String, int, float, boolean, ID
+
 // Create a Yoga instance with a GraphQL schema
 const yoga = createYoga({
     schema: createSchema({
         typeDefs: /* GraphQL */ `
             type Query {
-                hello: String!
+                id: ID!
                 name: String!
-                location: String!
-                bio: String!
+                age: Int!
+                employed: Boolean!
+                gpa: Float
             }
         `,
         resolvers: {
             Query: {
-                // Resolver for the 'hello' field
-                hello: () => 'This is my first query!',
-                // Resolver for the 'name' field
-                name: () => 'John Doe',
-                // Resolver for the 'location' field
-                location: () => 'New York',
-                // Resolver for the 'bio' field
-                bio: () => 'I am a software engineer',
+                id: () => 'abc123',
+                name: () => 'Davide Ladisa',
+                age: () => 30,
+                employed: () => true,
+                gpa: () => 3.01,
             },
         },
     }),
