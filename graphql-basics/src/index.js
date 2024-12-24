@@ -8,43 +8,40 @@ const users = [
     {
         id: '1',
         name: 'Davide',
-        email: 'info@davideladisa.it',
-        age: 28,
+        email: 'davide@example.com',
+        age: 27,
     },
     {
         id: '2',
-        name: 'John',
-        email: 'john@example.com',
-        age: 30,
+        name: 'Michele',
+        email: 'michele@example.com',
     },
     {
         id: '3',
-        name: 'Jane',
-        email: 'jane@example.com',
-        age: 28,
+        name: 'Tiziano',
+        email: 'tiziano@example.com',
     },
 ];
 
-// Array di post con dati di esempio
 const posts = [
     {
-        id: '1',
-        title: 'GraphQL',
-        body: 'GraphQL is a query language for APIs and a runtime for fulfilling those queries with your existing data.',
-        published: true,
-        author: '1', // Riferimento all'id dell'autore
-    },
-    {
-        id: '2',
-        title: 'Node.js',
-        body: "Node.js is a JavaScript runtime built on Chrome's V8 JavaScript engine.",
+        id: '10',
+        title: 'GraphQL 101',
+        body: 'This is how to use GraphQL...',
         published: true,
         author: '1',
     },
     {
-        id: '3',
-        title: 'React',
-        body: 'React is a JavaScript library for building user interfaces.',
+        id: '11',
+        title: 'GraphQL 201',
+        body: 'This is an advanced GraphQL post...',
+        published: false,
+        author: '1',
+    },
+    {
+        id: '12',
+        title: 'Programming Music',
+        body: '',
         published: false,
         author: '2',
     },
@@ -56,9 +53,10 @@ const yoga = createYoga({
         // Definizione dei tipi GraphQL
         typeDefs: /* GraphQL */ `
             type Query {
-                posts(query: String): [Post!]! # Query per ottenere i post con filtro opzionale
-                me: User! # Query per ottenere l'utente corrente
-                post: Post! # Query per ottenere un post
+                users(query: String): [User!]!
+                posts(query: String): [Post!]!
+                me: User!
+                post: Post!
             }
 
             type User {
@@ -66,6 +64,7 @@ const yoga = createYoga({
                 name: String!
                 email: String!
                 age: Int
+                posts: [Post!]!
             }
 
             type Post {
@@ -73,18 +72,26 @@ const yoga = createYoga({
                 title: String!
                 body: String!
                 published: Boolean!
-                author: User! # Relazione con l'utente autore
+                author: User!
             }
         `,
         // Implementazione dei resolver
         resolvers: {
             Query: {
-                // Resolver per la query posts
-                posts: (parent, args, ctx, info) => {
+                users(parent, args, ctx, info) {
                     if (!args.query) {
-                        return posts; // Ritorna tutti i post se non c'è query
+                        return users;
                     }
-                    // Filtra i post in base alla query
+
+                    return users.filter((user) => {
+                        return user.name.toLowerCase().includes(args.query.toLowerCase());
+                    });
+                },
+                posts(parent, args, ctx, info) {
+                    if (!args.query) {
+                        return posts;
+                    }
+
                     return posts.filter((post) => {
                         const isTitleMatch = post.title
                             .toLowerCase()
@@ -95,20 +102,34 @@ const yoga = createYoga({
                         return isTitleMatch || isBodyMatch;
                     });
                 },
-                // Resolver per la query me
-                me: () => {
+                me() {
                     return {
-                        id: '7',
-                        name: 'Davide',
-                        email: 'info@davideladisa.it',
-                        age: 28,
+                        id: '123098',
+                        name: 'Mike',
+                        email: 'mike@example.com',
+                    };
+                },
+                post() {
+                    return {
+                        id: '092',
+                        title: 'GraphQL 101',
+                        body: '',
+                        published: false,
                     };
                 },
             },
-            // Resolver per il campo author del tipo Post
             Post: {
                 author(parent, args, ctx, info) {
-                    return users.find((user) => user.id === parent.author);
+                    return users.find((user) => {
+                        return user.id === parent.author;
+                    });
+                },
+            },
+            User: {
+                posts(parent, args, ctx, info) {
+                    return posts.filter((post) => {
+                        return post.author === parent.id;
+                    });
                 },
             },
         },
