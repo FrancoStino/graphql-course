@@ -3,31 +3,38 @@ import { createSchema, createYoga } from 'graphql-yoga';
 
 // Scalar Types - String, int, float, boolean, ID
 
-// Demo user data
-const users = [
+// 1. Set up an array of three posts with dummy post data (id, title, body, published)
+// 2. Set up a "posts" query and resolver that returns all the posts
+// 3. Test the query out
+// 4. Add a "query" argument that only returns posts that contain the query string in the title or body
+// 5. Run a few sample queries searching for posts with a specific title
+
+const posts = [
     {
         id: '1',
-        name: 'John',
-        email: 'john@example.com',
-        age: 25,
+        title: 'GraphQL',
+        body: 'GraphQL is a query language for APIs and a runtime for fulfilling those queries with your existing data.',
+        published: true,
     },
     {
         id: '2',
-        name: 'Jane',
-        email: 'jane@example.com',
+        title: 'Node.js',
+        body: 'Node.js is a JavaScript runtime built on Chrome’s V8 JavaScript engine.',
+        published: true,
     },
     {
         id: '3',
-        name: 'Bob',
-        email: 'bob@example.com',
-        age: 35,
+        title: 'React',
+        body: 'React is a JavaScript library for building user interfaces.',
+        published: false,
     },
 ];
+
 const yoga = createYoga({
     schema: createSchema({
         typeDefs: /* GraphQL */ `
             type Query {
-                users(query: String): [User!]!
+                posts(query: String): [Post!]!
                 me: User!
                 post: Post!
             }
@@ -46,13 +53,18 @@ const yoga = createYoga({
         `,
         resolvers: {
             Query: {
-                users(parent, args, context, info) {
+                posts: (parent, args, ctx, info) => {
                     if (!args.query) {
-                        return users;
+                        return posts;
                     }
-
-                    return users.filter((user) => {
-                        return user.name.toLowerCase().includes(args.query.toLowerCase());
+                    return posts.filter((post) => {
+                        const isTitleMatch = post.title
+                            .toLowerCase()
+                            .includes(args.query.toLowerCase());
+                        const isBodyMatch = post.body
+                            .toLowerCase()
+                            .includes(args.query.toLowerCase());
+                        return isTitleMatch || isBodyMatch;
                     });
                 },
                 me: () => {
