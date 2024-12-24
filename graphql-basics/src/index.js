@@ -3,18 +3,31 @@ import { createSchema, createYoga } from 'graphql-yoga';
 
 // Scalar Types - String, int, float, boolean, ID
 
-// Create a Yoga instance with a GraphQL schema
-
-// 1. Create an "add" query that returns a float
-// 2. Set up "add" to take two arguments (a, b) which are required floats
-// 3. Have the resolver send back the sum of the two arguments
+// Demo user data
+const users = [
+    {
+        id: '1',
+        name: 'John',
+        email: 'john@example.com',
+        age: 25,
+    },
+    {
+        id: '2',
+        name: 'Jane',
+        email: 'jane@example.com',
+    },
+    {
+        id: '3',
+        name: 'Bob',
+        email: 'bob@example.com',
+        age: 35,
+    },
+];
 const yoga = createYoga({
     schema: createSchema({
         typeDefs: /* GraphQL */ `
             type Query {
-                add(numbers: [Float!]!): Float!
-                greeting(name: String, position: String): String!
-                grades: [Int!]!
+                users(query: String): [User!]!
                 me: User!
                 post: Post!
             }
@@ -33,24 +46,14 @@ const yoga = createYoga({
         `,
         resolvers: {
             Query: {
-                add(parent, args, ctx, info) {
-                    if (args.numbers.length === 0) {
-                        return 0;
+                users(parent, args, context, info) {
+                    if (!args.query) {
+                        return users;
                     }
 
-                    return args.numbers.reduce(
-                        (accumulator, currentValue) => accumulator + currentValue,
-                    );
-                },
-                greeting(parent, args, ctx, info) {
-                    if (args.name && args.position) {
-                        return `Hello, ${args.name}! You are my favorite ${args.position}.`;
-                    } else {
-                        return 'Hello!';
-                    }
-                },
-                grades() {
-                    return [99, 80, 93];
+                    return users.filter((user) => {
+                        return user.name.toLowerCase().includes(args.query.toLowerCase());
+                    });
                 },
                 me: () => {
                     return {
