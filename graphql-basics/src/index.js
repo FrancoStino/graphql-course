@@ -3,10 +3,15 @@
 import { createServer } from 'node:http';
 import { createSchema, createYoga } from 'graphql-yoga';
 
-// 1. Set up a "Comment" type with id and text fields. Both are non-nullable. OK
-// 2. Set up a "comments" array with 4 comments. OK
-// 3. Set up a "comments" query with a  resolver that returns all comments.
-// 4. Run a query to get all 4 comments with both id and text fields.
+// Goal: Set up a relationship between Comment and User
+
+// 1. Set up an author field on Comment - OK
+// 2. Update all comments in the array to have a new author field (use on of the user ids as value) - OK
+// 3. Crate a resolver for the Comments author field that returns the user who wrote the comment - OK
+// 4. Run a sample query thats get all comments and gets the author name - OK
+// 5. Set up a comments field on User - OK
+// 6. Set up a resolver for the User comments field that returns all comments belonging to that user - OK
+// 7. Run a sample query that gets all users and all there comments - OK
 
 // Array di utenti con dati di esempio
 const users = [
@@ -58,18 +63,22 @@ const comments = [
     {
         id: '102',
         text: 'This worked well for me. Thanks!',
+        author: '1', // Riferimento all'id dell'utente autore
     },
     {
         id: '103',
         text: 'Glad you enjoyed it.',
+        author: '1',
     },
     {
         id: '104',
         text: 'This did no work.',
+        author: '2',
     },
     {
         id: '105',
         text: 'Nevermind. I got it to work.',
+        author: '3',
     },
 ];
 // Creazione dell'istanza GraphQL Yoga
@@ -93,6 +102,7 @@ const yoga = createYoga({
                 email: String!
                 age: Int
                 posts: [Post!]! # Relazione one-to-many con i post
+                comments: [Comment!]! # Relazione one-to-many con i commenti
             }
 
             # Tipo Post rappresenta un articolo
@@ -106,6 +116,7 @@ const yoga = createYoga({
             type Comment {
                 id: ID!
                 text: String!
+                author: User! # Relazione many-to-one con l'utente
             }
         `,
         // Implementazione dei resolver per gestire le query
@@ -165,11 +176,24 @@ const yoga = createYoga({
                     });
                 },
             },
-            // Resolver per il tipo User per gestire la relazione con i post
+            // Resolver per il tipo User per gestire la relazione con i post e commenti
             User: {
                 posts(parent, args, ctx, info) {
                     return posts.filter((post) => {
                         return post.author === parent.id;
+                    });
+                },
+                comments(parent, args, ctx, info) {
+                    return comments.filter((comment) => {
+                        return comment.author === parent.id;
+                    });
+                },
+            },
+            // Resolver per il tipo Comment per gestire la relazione con l'autore
+            Comment: {
+                author(parent, args, ctx, info) {
+                    return users.find((user) => {
+                        return user.id === parent.author;
                     });
                 },
             },
