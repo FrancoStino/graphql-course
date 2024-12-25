@@ -3,10 +3,10 @@
 import { createServer } from 'node:http';
 import { createSchema, createYoga } from 'graphql-yoga';
 
-// 1. Set up a "Comment" type with id and text fields. Both are non-nullable. OK
-// 2. Set up a "comments" array with 4 comments. OK
-// 3. Set up a "comments" query with a  resolver that returns all comments.
-// 4. Run a query to get all 4 comments with both id and text fields.
+// 1. Set up a "Comment" type with id and text fields. Both are non-nullable - OK
+// 2. Set up a "comments" array with 4 comments - OK
+// 3. Set up a "comments" query with a  resolver that returns all comments - OK
+// 4. Run a query to get all 4 comments with both id and text fields - OK
 
 // Array di utenti con dati di esempio
 const users = [
