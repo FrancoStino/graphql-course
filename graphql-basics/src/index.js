@@ -3,6 +3,11 @@
 import { createServer } from 'node:http';
 import { createSchema, createYoga } from 'graphql-yoga';
 
+// 1. Set up a "Comment" type with id and text fields. Both are non-nullable. OK
+// 2. Set up a "comments" array with 4 comments. OK
+// 3. Set up a "comments" query with a  resolver that returns all comments.
+// 4. Run a query to get all 4 comments with both id and text fields.
+
 // Array di utenti con dati di esempio
 const users = [
     {
@@ -48,6 +53,25 @@ const posts = [
     },
 ];
 
+// Array di commenti con dati di esempio
+const comments = [
+    {
+        id: '102',
+        text: 'This worked well for me. Thanks!',
+    },
+    {
+        id: '103',
+        text: 'Glad you enjoyed it.',
+    },
+    {
+        id: '104',
+        text: 'This did no work.',
+    },
+    {
+        id: '105',
+        text: 'Nevermind. I got it to work.',
+    },
+];
 // Creazione dell'istanza GraphQL Yoga
 const yoga = createYoga({
     schema: createSchema({
@@ -57,6 +81,7 @@ const yoga = createYoga({
             type Query {
                 users(query: String): [User!]! # Lista di utenti con filtro opzionale
                 posts(query: String): [Post!]! # Lista di post con filtro opzionale
+                comments: [Comment!]! # Lista di commenti
                 me: User! # Utente corrente
                 post: Post! # Post singolo
             }
@@ -77,6 +102,10 @@ const yoga = createYoga({
                 body: String!
                 published: Boolean!
                 author: User! # Relazione many-to-one con l'utente
+            }
+            type Comment {
+                id: ID!
+                text: String!
             }
         `,
         // Implementazione dei resolver per gestire le query
@@ -122,6 +151,10 @@ const yoga = createYoga({
                         body: '',
                         published: false,
                     };
+                },
+                // Resolver per ottenere tutti i commenti
+                comments() {
+                    return comments;
                 },
             },
             // Resolver per il tipo Post per gestire la relazione con l'autore
