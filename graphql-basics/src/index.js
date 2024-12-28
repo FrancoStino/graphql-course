@@ -3,6 +3,7 @@
 import { createServer } from 'node:http';
 import { createSchema, createYoga } from 'graphql-yoga';
 import { v4 as uuidv4 } from 'uuid';
+import { GraphQLError } from 'graphql';
 
 // Goal: Set up a relationship between Comment and Post
 
@@ -102,6 +103,7 @@ const yoga = createYoga({
             # Type Mutation definisce i punti di ingresso per le operazioni di scrittura
             type Mutation {
                 createUser(name: String!, email: String!, age: Int): User! # Crea un nuovo utente
+                createPost(title: String!, body: String!, published: Boolean!, author: ID!): Post! # Crea un nuovo post
             }
             # Tipo User rappresenta un utente
             type User {
@@ -183,7 +185,8 @@ const yoga = createYoga({
                 createUser(parent, args, ctx, info) {
                     const emailTaken = users.some((user) => user.email === args.email);
                     if (emailTaken) {
-                        throw new Error('Email already in use');
+                        //Error handling
+                        throw new GraphQLError('Email already in use');
                     }
                     const user = {
                         id: uuidv4(),
@@ -196,6 +199,23 @@ const yoga = createYoga({
                     return user;
 
                     // console.log(args);
+                },
+                // Resolver per il tipo Mutation per gestire la creazione di un nuovo post
+                createPost(parent, args, ctx, info) {
+                    const userExists = users.some((user) => user.id === args.author);
+                    if (!userExists) {
+                        //Error handling
+                        throw new GraphQLError('User not found');
+                    }
+                    const post = {
+                        id: uuidv4(),
+                        title: args.title,
+                        body: args.body,
+                        published: args.published,
+                        author: args.author,
+                    };
+                    posts.push(post);
+                    return post;
                 },
             },
             // Resolver per il tipo Post per gestire la relazione con l'autore
