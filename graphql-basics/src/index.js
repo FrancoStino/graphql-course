@@ -5,15 +5,18 @@ import { createSchema, createYoga } from 'graphql-yoga';
 import { v4 as uuidv4 } from 'uuid';
 import { GraphQLError } from 'graphql';
 
-// Goal: Set up a relationship between Comment and Post
+// Goal: Allow client to create a new comment
 
-// 1. Set up an author field on Comment - OK
-// 2. Update all comments in the array to have a new post field (use on of the post ids as value) - OK
-// 3. Crate a resolver for the Comments post field that returns the post that the comment belongs to - OK
-// 4. Run a sample query thats get all comments and gets the post name - OK
-// 5. Set up a comments field on Post - OK
-// 6. Set up a resolver for the Post comments field that returns all comments belonging to that post - OK
-// 7. Run a sample query that gets all posts and all there comments - OK
+// 1. Define a new createCommit mutation
+//     - Should take text, author, post - OK
+//     - Should return the created comment - OK
+
+// 2. Define a resolver method for createComment
+//     - Check if the author and post exist else throw an error - OK
+//     - Confirm the post exists and is published, else throw an error - OK
+//     - If they do exist, create the comment and return it - OK
+// 3. Run the mutation and add a comment
+// 4. Use the comments query to verify the comment was added
 
 // Array di utenti con dati di esempio
 const users = [
@@ -104,6 +107,7 @@ const yoga = createYoga({
             type Mutation {
                 createUser(name: String!, email: String!, age: Int): User! # Crea un nuovo utente
                 createPost(title: String!, body: String!, published: Boolean!, author: ID!): Post! # Crea un nuovo post
+                createComment(text: String!, author: ID!, post: ID!): Comment! # Crea un nuovo commento
             }
             # Tipo User rappresenta un utente
             type User {
@@ -216,6 +220,31 @@ const yoga = createYoga({
                     };
                     posts.push(post);
                     return post;
+                },
+                // Resolver per il tipo Mutation per gestire la creazione di un nuovo commento
+                createComment(parent, args, ctx, info) {
+                    const userExists = users.some((user) => user.id === args.author);
+                    const postExists = posts.some(
+                        (post) => post.id === args.post && post.published,
+                    );
+
+                    if (!userExists) {
+                        //Error handling
+                        throw new GraphQLError('User not found');
+                    }
+
+                    if (!postExists) {
+                        //Error handling
+                        throw new GraphQLError('Post not found');
+                    }
+                    const comment = {
+                        id: uuidv4(),
+                        text: args.text,
+                        author: args.author,
+                        post: args.post,
+                    };
+                    comments.push(comment);
+                    return comment;
                 },
             },
             // Resolver per il tipo Post per gestire la relazione con l'autore
