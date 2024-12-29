@@ -1,3 +1,10 @@
+/**
+ * Babel configuration for the project.
+ * Includes the 'env' preset and the 'transform-object-rest-spread' plugin.
+ * The 'env' preset configures Babel to use the latest JavaScript syntax features.
+ * The 'transform-object-rest-spread' plugin enables the use of the object rest/spread syntax.
+ */
 {
-    "presets": ["env"]
+    "presets": ["env"],
+    "plugins": ["transform-object-rest-spread"]
 }
