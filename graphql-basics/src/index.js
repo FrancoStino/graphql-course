@@ -5,17 +5,10 @@ import { createSchema, createYoga } from 'graphql-yoga';
 import { v4 as uuidv4 } from 'uuid';
 import { GraphQLError } from 'graphql';
 
-// Goal: Create input type for createPost and createComment
-//
-// 1. Create input type for createPost with this same fields. Use "data" or  "post" as arg name.
-// 2. Update createPost resolver to use this new object.
-// 3. Verify application still works by creating a post then fetching it.
-// 4. Create an input type for createComment with this same fields. Use "data" or  "comment" as arg name.
-// 5. Update createComment resolver to use this new object.
-// 6. Verify application still works by creating a comment then fetching it.
+// Scalar type - String, Boolean, Int, Float, ID
 
 // Array di utenti con dati di esempio
-const users = [
+let users = [
     {
         id: '1',
         name: 'Davide',
@@ -35,7 +28,7 @@ const users = [
 ];
 
 // Array di post con dati di esempio
-const posts = [
+let posts = [
     {
         id: '10',
         title: 'GraphQL 101',
@@ -60,7 +53,7 @@ const posts = [
 ];
 
 // Array di commenti con dati di esempio
-const comments = [
+let comments = [
     {
         id: '102',
         text: 'This worked well for me. Thanks!',
@@ -102,6 +95,7 @@ const yoga = createYoga({
             # Type Mutation definisce i punti di ingresso per le operazioni di scrittura
             type Mutation {
                 createUser(data: CreateUserInput): User! # Crea un nuovo utente
+                deleteUser(id: ID!): User! # Elimina un utente
                 createPost(data: CreatePostInput): Post! # Crea un nuovo post
                 createComment(data: CreateCommentInput): Comment! # Crea un nuovo commento
             }
@@ -219,6 +213,39 @@ const yoga = createYoga({
                     return user;
 
                     // console.log(args);
+                },
+                // Resolver per il tipo Mutation per gestire l'eliminazione di un utente
+                deleteUser(parent, args, ctx, info) {
+                    // 1. Trova l'indice dell'utente da eliminare nell'array degli utenti
+                    const userIndex = users.findIndex((user) => user.id === args.id);
+
+                    // 2. Se l'utente non viene trovato, lancia un errore
+                    if (userIndex === -1) {
+                        //Error handling
+                        throw new GraphQLError('User not found');
+                    }
+
+                    // 3. Rimuove l'utente dall'array e lo memorizza
+                    const deletedUsers = users.splice(userIndex, 1);
+
+                    // 4. Filtra i post rimuovendo quelli dell'utente eliminato
+                    posts = posts.filter((post) => {
+                        const match = post.author === args.id;
+
+                        // 5. Se trova un post dell'utente, rimuove anche tutti i commenti associati a quel post
+                        if (match) {
+                            comments = comments.filter((comment) => comment.post !== post.id);
+                        }
+
+                        // 6. Mantiene solo i post che non appartengono all'utente eliminato
+                        return !match;
+                    });
+
+                    // 7. Rimuove tutti i commenti fatti dall'utente eliminato
+                    comments = comments.filter((comment) => comment.author !== args.id);
+
+                    // 8. Restituisce l'utente eliminato
+                    return deletedUsers[0];
                 },
                 // Resolver per il tipo Mutation per gestire la creazione di un nuovo post
                 createPost(parent, args, ctx, info) {
