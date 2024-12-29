@@ -105,9 +105,15 @@ const yoga = createYoga({
             }
             # Type Mutation definisce i punti di ingresso per le operazioni di scrittura
             type Mutation {
-                createUser(name: String!, email: String!, age: Int): User! # Crea un nuovo utente
+                createUser(data: CreateUserInput): User! # Crea un nuovo utente
                 createPost(title: String!, body: String!, published: Boolean!, author: ID!): Post! # Crea un nuovo post
                 createComment(text: String!, author: ID!, post: ID!): Comment! # Crea un nuovo commento
+            }
+            # Keyord input definisce un tipo di input per la creazione di un utente
+            input CreateUserInput {
+                name: String!
+                email: String!
+                age: Int
             }
             # Tipo User rappresenta un utente
             type User {
@@ -187,7 +193,7 @@ const yoga = createYoga({
             // Resolver per il tipo Mutation per gestire la creazione di un nuovo utente
             Mutation: {
                 createUser(parent, args, ctx, info) {
-                    const emailTaken = users.some((user) => user.email === args.email);
+                    const emailTaken = users.some((user) => user.email === args.data.email);
                     if (emailTaken) {
                         //Error handling
                         throw new GraphQLError('Email already in use');
@@ -197,7 +203,7 @@ const yoga = createYoga({
                         // name: args.name,
                         // email: args.email,
                         // age: args.age,
-                        ...args,
+                        ...args.data,
                     };
 
                     users.push(user);
