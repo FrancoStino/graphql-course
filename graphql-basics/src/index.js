@@ -7,6 +7,15 @@ import { GraphQLError } from 'graphql';
 
 // Scalar type - String, Boolean, Int, Float, ID
 
+// Goal: Setup a Mutation for deleting a post
+
+// 1. Define a mutation. It should take the post id. It should return the deleted post.
+// 2. Define the resolver for the mutation.
+//      - Check if the post exists, else throw an error
+//      - Remove and return the post
+//      - Remove all comments belonging to the post
+// 3. Test your work by running query to delete a post. Verify post/comments are removed.
+
 // Array di utenti con dati di esempio
 let users = [
     {
@@ -97,6 +106,7 @@ const yoga = createYoga({
                 createUser(data: CreateUserInput): User! # Crea un nuovo utente
                 deleteUser(id: ID!): User! # Elimina un utente
                 createPost(data: CreatePostInput): Post! # Crea un nuovo post
+                deletePost(id: ID!): Post! # Elimina un post
                 createComment(data: CreateCommentInput): Comment! # Crea un nuovo commento
             }
             # Keyord input definisce un tipo di input per la creazione di un utente
@@ -264,6 +274,22 @@ const yoga = createYoga({
                     };
                     posts.push(post);
                     return post;
+                },
+                // Resolver per il tipo Mutation per gestire l'eliminazione di un post
+                deletePost(parent, args, ctx, info) {
+                    // 1. Trova l'indice del post da eliminare nell'array dei post
+                    const postIndex = posts.findIndex((post) => post.id === args.id);
+                    // 2. Se il post non viene trovato, lancia un errore
+                    if (postIndex === -1) {
+                        //Error handling
+                        throw new GraphQLError('Post not found');
+                    }
+                    // 3. Rimuove il post dall'array e lo memorizza
+                    const deletedPost = posts.splice(postIndex, 1);
+                    // 4. Filtra i commenti rimuovendo quelli del post eliminato
+                    comments = comments.filter((comment) => comment.post !== args.id);
+                    // 5. Restituisce il post eliminato
+                    return deletedPost[0];
                 },
                 // Resolver per il tipo Mutation per gestire la creazione di un nuovo commento
                 createComment(parent, args, ctx, info) {
