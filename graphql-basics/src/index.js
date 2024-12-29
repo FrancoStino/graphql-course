@@ -5,18 +5,14 @@ import { createSchema, createYoga } from 'graphql-yoga';
 import { v4 as uuidv4 } from 'uuid';
 import { GraphQLError } from 'graphql';
 
-// Goal: Allow client to create a new comment
-
-// 1. Define a new createCommit mutation
-//     - Should take text, author, post - OK
-//     - Should return the created comment - OK
-
-// 2. Define a resolver method for createComment
-//     - Check if the author and post exist else throw an error - OK
-//     - Confirm the post exists and is published, else throw an error - OK
-//     - If they do exist, create the comment and return it - OK
-// 3. Run the mutation and add a comment
-// 4. Use the comments query to verify the comment was added
+// Goal: Create input type for createPost and createComment
+//
+// 1. Create input type for createPost with this same fields. Use "data" or  "post" as arg name.
+// 2. Update createPost resolver to use this new object.
+// 3. Verify application still works by creating a post then fetching it.
+// 4. Create an input type for createComment with this same fields. Use "data" or  "comment" as arg name.
+// 5. Update createComment resolver to use this new object.
+// 6. Verify application still works by creating a comment then fetching it.
 
 // Array di utenti con dati di esempio
 const users = [
@@ -106,14 +102,27 @@ const yoga = createYoga({
             # Type Mutation definisce i punti di ingresso per le operazioni di scrittura
             type Mutation {
                 createUser(data: CreateUserInput): User! # Crea un nuovo utente
-                createPost(title: String!, body: String!, published: Boolean!, author: ID!): Post! # Crea un nuovo post
-                createComment(text: String!, author: ID!, post: ID!): Comment! # Crea un nuovo commento
+                createPost(data: CreatePostInput): Post! # Crea un nuovo post
+                createComment(data: CreateCommentInput): Comment! # Crea un nuovo commento
             }
             # Keyord input definisce un tipo di input per la creazione di un utente
             input CreateUserInput {
                 name: String!
                 email: String!
                 age: Int
+            }
+            # Keyord input definisce un tipo di input per la creazione di un post
+            input CreatePostInput {
+                title: String!
+                body: String!
+                published: Boolean!
+                author: ID!
+            }
+            # Keyord input definisce un tipo di input per la creazione di un commento
+            input CreateCommentInput {
+                text: String!
+                author: ID!
+                post: ID!
             }
             # Tipo User rappresenta un utente
             type User {
@@ -213,7 +222,7 @@ const yoga = createYoga({
                 },
                 // Resolver per il tipo Mutation per gestire la creazione di un nuovo post
                 createPost(parent, args, ctx, info) {
-                    const userExists = users.some((user) => user.id === args.author);
+                    const userExists = users.some((user) => user.id === args.data.author);
                     if (!userExists) {
                         //Error handling
                         throw new GraphQLError('User not found');
@@ -224,16 +233,16 @@ const yoga = createYoga({
                         // body: args.body,
                         // published: args.published,
                         // author: args.author,
-                        ...args,
+                        ...args.data,
                     };
                     posts.push(post);
                     return post;
                 },
                 // Resolver per il tipo Mutation per gestire la creazione di un nuovo commento
                 createComment(parent, args, ctx, info) {
-                    const userExists = users.some((user) => user.id === args.author);
+                    const userExists = users.some((user) => user.id === args.data.author);
                     const postExists = posts.some(
-                        (post) => post.id === args.post && post.published,
+                        (post) => post.id === args.data.post && post.published,
                     );
 
                     if (!userExists) {
@@ -250,7 +259,7 @@ const yoga = createYoga({
                         // text: args.text,
                         // author: args.author,
                         // post: args.post,
-                        ...args,
+                        ...args.data,
                     };
                     comments.push(comment);
                     return comment;
