@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 // 1. Define mutation
 //   - Add id/data for arguments. Setup data to support title, body, published
-//   - Return theupdated post
+//   - Return the updated post
 // 2. Create resolver method
 //   - Verify post exists, else throw error
 //   Update post proprties on at a time
