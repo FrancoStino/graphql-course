@@ -7,14 +7,13 @@ import { GraphQLError } from 'graphql';
 
 // Scalar type - String, Boolean, Int, Float, ID
 
-// Goal: Setup a Mutation for deleting a post
+// Goal: Setup a Mutation for deleting a comment
 
-// 1. Define a mutation. It should take the post id. It should return the deleted post.
+// 1. Define a mutation. It should take the comment id. It should return the deleted comment.
 // 2. Define the resolver for the mutation.
-//      - Check if the post exists, else throw an error
-//      - Remove and return the post
-//      - Remove all comments belonging to the post
-// 3. Test your work by running query to delete a post. Verify post/comments are removed.
+//      - Check if the comment exists, else throw an error
+//      - Remove and return the comment
+// 3. Test your work by running query to delete a post. Verify comment are removed.
 
 // Array di utenti con dati di esempio
 let users = [
@@ -108,6 +107,7 @@ const yoga = createYoga({
                 createPost(data: CreatePostInput): Post! # Crea un nuovo post
                 deletePost(id: ID!): Post! # Elimina un post
                 createComment(data: CreateCommentInput): Comment! # Crea un nuovo commento
+                deleteComment(id: ID!): Comment! # Elimina un commento
             }
             # Keyord input definisce un tipo di input per la creazione di un utente
             input CreateUserInput {
@@ -316,6 +316,20 @@ const yoga = createYoga({
                     };
                     comments.push(comment);
                     return comment;
+                },
+                // Resolver per il tipo Mutation per gestire l'eliminazione di un commento
+                deleteComment(parent, args, ctx, info) {
+                    // 1. Trova l'indice del commento da eliminare nell'array dei commenti
+                    const commentIndex = comments.findIndex((comment) => comment.id === args.id);
+                    // 2. Se il commento non viene trovato, lancia un errore
+                    if (commentIndex === -1) {
+                        //Error handling
+                        throw new GraphQLError('Comment not found');
+                    }
+                    // 3. Rimuove il commento dall'array e lo memorizza
+                    const deletedComment = comments.splice(commentIndex, 1);
+                    // 4. Restituisce il commento eliminato
+                    return deletedComment[0];
                 },
             },
             // Resolver per il tipo Post per gestire la relazione con l'autore
