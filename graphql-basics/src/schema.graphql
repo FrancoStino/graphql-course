@@ -17,6 +17,7 @@ type Mutation {
     updatePost(id: ID!, data: UpdatePostInput): Post! # Aggiorna un post
     createComment(data: CreateCommentInput): Comment! # Crea un nuovo commento
     deleteComment(id: ID!): Comment! # Elimina un commento
+    updateComment(id: ID!, data: UpdateCommentInput): Comment! # Aggiorna un commento
 }
 # Keyord input definisce un tipo di input per la creazione di un utente
 input CreateUserInput {
@@ -48,6 +49,10 @@ input CreateCommentInput {
     text: String!
     author: ID!
     post: ID!
+}
+# Keyord input definisce un tipo di input per l'aggiornamento di un commento
+input UpdateCommentInput {
+    text: String
 }
 # Tipo User rappresenta un utente
 type User {

@@ -1,15 +1,15 @@
 import { GraphQLError } from 'graphql';
 import { v4 as uuidv4 } from 'uuid';
 
-// Goal: Set up a mutation for updating a post
+// Goal: Set up a mutation for updating a comment
 
 // 1. Define mutation
-//   - Add id/data for arguments. Setup data to support title, body, published
-//   - Return theupdated post
+//   - Add id/data for arguments. Setup data to support text
+//   - Return the updated comment
 // 2. Create resolver method
-//   - Verify post exists, else throw error
-//   Update post proprties on at a time
-// 3. Verify your work by updating all properties for a given post
+//   - Verify comment exists, else throw error
+//   Update comment proprties on at a time
+// 3. Verify your work by updating all properties for a given comment
 
 const Mutation = {
     createUser(parent, args, { db }, info) {
@@ -137,6 +137,17 @@ const Mutation = {
         }
         const deletedComment = db.comments.splice(commentIndex, 1);
         return deletedComment[0];
+    },
+    updateComment(parent, args, { db }, info) {
+        const { id, data } = args;
+        const commentIndex = db.comments.findIndex((comment) => comment.id === id);
+        if (commentIndex === -1) {
+            throw new GraphQLError('Comment not found');
+        }
+        if (typeof data.text === 'string') {
+            db.comments[commentIndex].text = data.text;
+        }
+        return db.comments[commentIndex];
     },
 };
 
