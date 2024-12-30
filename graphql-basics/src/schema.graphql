@@ -11,6 +11,7 @@ type Query {
 type Mutation {
     createUser(data: CreateUserInput): User! # Crea un nuovo utente
     deleteUser(id: ID!): User! # Elimina un utente
+    updateUser(id: ID!, data: UpdateUserInput): User! # Aggiorna un utente
     createPost(data: CreatePostInput): Post! # Crea un nuovo post
     deletePost(id: ID!): Post! # Elimina un post
     createComment(data: CreateCommentInput): Comment! # Crea un nuovo commento
@@ -20,6 +21,12 @@ type Mutation {
 input CreateUserInput {
     name: String!
     email: String!
+    age: Int
+}
+# Keyord input definisce un tipo di input per l'aggiornamento di un utente
+input UpdateUserInput {
+    name: String
+    email: String
     age: Int
 }
 # Keyord input definisce un tipo di input per la creazione di un post

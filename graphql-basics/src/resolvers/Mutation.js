@@ -38,6 +38,31 @@ const Mutation = {
 
         return deletedUsers[0];
     },
+    updateUser(parent, args, { db }, info) {
+        const { id, data } = args;
+        const userIndex = db.users.findIndex((user) => user.id === id);
+        const user = db.users[userIndex];
+
+        if (userIndex === -1) {
+            throw new GraphQLError('User not found');
+        }
+
+        if (typeof data.email === 'string') {
+            const emailTaken = db.users.some((user) => user.email === data.email);
+            if (emailTaken) {
+                throw new GraphQLError('Email already in use');
+            }
+            db.users[userIndex].email = data.email;
+        }
+
+        if (typeof data.name === 'string') {
+            db.users[userIndex].name = data.name;
+        }
+        if (typeof data.age !== 'undefined') {
+            db.users[userIndex].age = data.age;
+        }
+        return db.users[userIndex];
+    },
     createPost(parent, args, { db }, info) {
         const userExists = db.users.some((user) => user.id === args.data.author);
         if (!userExists) {
