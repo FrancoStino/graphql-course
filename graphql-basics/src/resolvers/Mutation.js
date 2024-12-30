@@ -1,6 +1,16 @@
 import { GraphQLError } from 'graphql';
 import { v4 as uuidv4 } from 'uuid';
 
+// Goal: Set up a mutation for updating a post
+
+// 1. Define mutation
+//   - Add id/data for arguments. Setup data to support title, body, published
+//   - Return theupdated post
+// 2. Create resolver method
+//   - Verify post exists, else throw error
+//   Update post proprties on at a time
+// 3. Verify your work by updating all properties for a given post
+
 const Mutation = {
     createUser(parent, args, { db }, info) {
         const emailTaken = db.users.some((user) => user.email === args.data.email);
@@ -83,6 +93,24 @@ const Mutation = {
         const deletedPost = db.posts.splice(postIndex, 1);
         db.comments = db.comments.filter((comment) => comment.post !== args.id);
         return deletedPost[0];
+    },
+    updatePost(parent, args, { db }, info) {
+        const { id, data } = args;
+        const postIndex = db.posts.findIndex((post) => post.id === id);
+        const post = db.posts[postIndex];
+        if (postIndex === -1) {
+            throw new GraphQLError('Post not found');
+        }
+        if (typeof data.title === 'string') {
+            db.posts[postIndex].title = data.title;
+        }
+        if (typeof data.body === 'string') {
+            db.posts[postIndex].body = data.body;
+        }
+        if (typeof data.published !== 'undefined') {
+            db.posts[postIndex].published = data.published;
+        }
+        return db.posts[postIndex];
     },
     createComment(parent, args, { db }, info) {
         const userExists = db.users.some((user) => user.id === args.data.author);
