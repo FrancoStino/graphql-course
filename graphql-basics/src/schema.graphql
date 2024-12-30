@@ -1,0 +1,62 @@
+# Schema GraphQL
+# Query type definisce i punti di ingresso per le richieste di lettura
+type Query {
+    users(query: String): [User!]! # Lista di utenti con filtro opzionale
+    posts(query: String): [Post!]! # Lista di post con filtro opzionale
+    comments: [Comment!]! # Lista di commenti
+    me: User! # Utente corrente
+    post: Post! # Post singolo
+}
+# Type Mutation definisce i punti di ingresso per le operazioni di scrittura
+type Mutation {
+    createUser(data: CreateUserInput): User! # Crea un nuovo utente
+    deleteUser(id: ID!): User! # Elimina un utente
+    createPost(data: CreatePostInput): Post! # Crea un nuovo post
+    deletePost(id: ID!): Post! # Elimina un post
+    createComment(data: CreateCommentInput): Comment! # Crea un nuovo commento
+    deleteComment(id: ID!): Comment! # Elimina un commento
+}
+# Keyord input definisce un tipo di input per la creazione di un utente
+input CreateUserInput {
+    name: String!
+    email: String!
+    age: Int
+}
+# Keyord input definisce un tipo di input per la creazione di un post
+input CreatePostInput {
+    title: String!
+    body: String!
+    published: Boolean!
+    author: ID!
+}
+# Keyord input definisce un tipo di input per la creazione di un commento
+input CreateCommentInput {
+    text: String!
+    author: ID!
+    post: ID!
+}
+# Tipo User rappresenta un utente
+type User {
+    id: ID!
+    name: String!
+    email: String!
+    age: Int
+    posts: [Post!]! # Relazione one-to-many con i post
+    comments: [Comment!]! # Relazione one-to-many con i commenti
+}
+
+# Tipo Post rappresenta un articolo
+type Post {
+    id: ID!
+    title: String!
+    body: String!
+    published: Boolean!
+    author: User! # Relazione many-to-one con l'utente
+    comments: [Comment!]! # Relazione one-to-many con i commenti
+}
+type Comment {
+    id: ID!
+    text: String!
+    author: User! # Relazione many-to-one con l'utente
+    post: Post! # Relazione many-to-one con il post
+}
