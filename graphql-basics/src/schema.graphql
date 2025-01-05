@@ -19,6 +19,10 @@ type Mutation {
     deleteComment(id: ID!): Comment! # Elimina un commento
     updateComment(id: ID!, data: UpdateCommentInput): Comment! # Aggiorna un commento
 }
+# Type Subscription definisce i punti di ingresso per le operazioni di sottoscrizione
+type Subscription {
+    count: Int! # Conta il numero di eventi
+}
 # Keyord input definisce un tipo di input per la creazione di un utente
 input CreateUserInput {
     name: String!
