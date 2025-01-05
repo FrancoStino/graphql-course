@@ -1,5 +1,6 @@
 const Subscription = {
     count: {
+        // Usato per Flessibilità nei metodi
         subscribe(parent, args, { pubsub }, info) {
             let count = 0;
             setInterval(() => {
