@@ -22,6 +22,7 @@ type Mutation {
 # Type Subscription definisce i punti di ingresso per le operazioni di sottoscrizione
 type Subscription {
     count: Int! # Conta il numero di eventi
+    comment(postId: ID!): Comment!
 }
 # Keyord input definisce un tipo di input per la creazione di un utente
 input CreateUserInput {
