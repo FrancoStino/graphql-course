@@ -65,7 +65,7 @@ const Mutation = {
         }
         return db.users[userIndex];
     },
-    createPost(parent, args, { db }, info) {
+    createPost(parent, args, { db, pubsub }, info) {
         const userExists = db.users.some((user) => user.id === args.data.author);
         if (!userExists) {
             throw new GraphQLError('User not found');
@@ -75,6 +75,11 @@ const Mutation = {
             ...args.data,
         };
         db.posts.push(post);
+        if (post.published) {
+            pubsub.publish('post', {
+                post,
+            });
+        }
         return post;
     },
     deletePost(parent, args, { db }, info) {
@@ -89,7 +94,6 @@ const Mutation = {
     updatePost(parent, args, { db }, info) {
         const { id, data } = args;
         const postIndex = db.posts.findIndex((post) => post.id === id);
-        const post = db.posts[postIndex];
         if (postIndex === -1) {
             throw new GraphQLError('Post not found');
         }
@@ -123,7 +127,6 @@ const Mutation = {
         pubsub.publish(`comment ${args.data.post}`, {
             comment,
         });
-        console.log(args);
         return comment;
     },
     deleteComment(parent, args, { db }, info) {

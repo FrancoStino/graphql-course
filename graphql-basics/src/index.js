@@ -34,6 +34,25 @@ const yoga = createYoga({
         db,
         pubsub,
     },
+    graphiql: {
+        title: 'GraphQL Course',
+        //     logo: `
+        //     <div style="display: flex; align-items: center;">
+        //         <img src="https://example.com/logo.png"
+        //              alt="GraphQL Logo"
+        //              style="height: 40px; margin-right: 10px;" />
+        //         <span style="font-size: 20px; font-weight: bold;">GraphQL Course</span>
+        //     </div>
+        // `,
+        // Puoi personalizzare il CSS, aggiungere un logo, ecc.
+        //     customCss: `
+        //   .title {
+        //     background-image: url('https://tuo-logo-url.com/logo.png');
+        //     background-size: contain;
+        //     height: 50px;
+        //   }
+        // `,
+    },
 });
 
 // Creazione del server HTTP
