@@ -14,11 +14,11 @@ const Subscription = {
     },
     comment: {
         subscribe(parent, { postId }, { db, pubsub }, info) {
-            const post = db.posts.find((post) => post.id === postId && post.published);
-            if (!post) {
-                throw new GraphQLError('Post not found or is not published');
+            const foundPost = db.posts.find((post) => post.id === postId && post.published);
+            if (!foundPost) {
+                throw new Error('Post not found or is not published');
             }
-            return pubsub.asyncIterator(`comment ${postId}`);
+            return pubsub.subscribe(`comment ${postId}`);
         },
     },
 };
