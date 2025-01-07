@@ -22,7 +22,7 @@ type Mutation {
 # Type Subscription definisce i punti di ingresso per le operazioni di sottoscrizione
 type Subscription {
     comment(postId: ID!): Comment! # Sottoscrivi i commenti di un post
-    post: Post! # Sottoscrivi i post
+    post: PostSubscriptionPayload! # Sottoscrivi i post
 }
 # Keyord input definisce un tipo di input per la creazione di un utente
 input CreateUserInput {
@@ -83,4 +83,9 @@ type Comment {
     text: String!
     author: User! # Relazione many-to-one con l'utente
     post: Post! # Relazione many-to-one con il post
+}
+
+type PostSubscriptionPayload {
+    mutation: String!
+    data: Post!
 }

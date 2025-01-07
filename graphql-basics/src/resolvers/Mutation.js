@@ -77,26 +77,56 @@ const Mutation = {
         db.posts.push(post);
         if (post.published) {
             pubsub.publish('post', {
-                post,
+                post: {
+                    mutation: 'CREATED',
+                    data: post,
+                },
             });
         }
         return post;
     },
-    deletePost(parent, args, { db }, info) {
+    deletePost(parent, args, { db, pubsub }, info) {
         const postIndex = db.posts.findIndex((post) => post.id === args.id);
         if (postIndex === -1) {
             throw new GraphQLError('Post not found');
         }
-        const deletedPost = db.posts.splice(postIndex, 1);
+        const [deletedPost] = db.posts.splice(postIndex, 1);
         db.comments = db.comments.filter((comment) => comment.post !== args.id);
-        return deletedPost[0];
+
+        if (deletedPost.published) {
+            pubsub.publish('post', {
+                post: {
+                    mutation: 'DELETED',
+                    data: deletedPost,
+                },
+            });
+        }
+        return deletedPost;
     },
-    updatePost(parent, args, { db }, info) {
+
+    // Updates an existing post in the database.
+
+    // Parameters:
+    // - `parent`: The parent resolver object (not used)
+    // - `args`: An object containing the post ID and the updated data for the post
+    // - `{ db, pubsub }`: An object containing the database and the PubSub instance
+    // - `info`: The GraphQL resolver info object (not used)
+
+    // The function first finds the index of the post in the `db.posts` array using the provided post ID. If the post is not found, it throws a `GraphQLError` with the message "Post not found".
+
+    // The function then checks if the `data.title`, `data.body`, or `data.published` properties are provided, and updates the corresponding fields in the post object. If the `published` status of the post changes, the function publishes a `'post'` event with the appropriate mutation type (`'UNPUBLISHED'` or `'PUBLISHED'`).
+
+    // If the post is published and any of the fields are updated, the function publishes a `'post'` event with the `'UPDATED'` mutation type.
+
+    // Finally, the function returns the updated post object.
+    updatePost(parent, args, { db, pubsub }, info) {
         const { id, data } = args;
         const postIndex = db.posts.findIndex((post) => post.id === id);
         if (postIndex === -1) {
             throw new GraphQLError('Post not found');
         }
+        const originalPost = { ...db.posts[postIndex] };
+
         if (typeof data.title === 'string') {
             db.posts[postIndex].title = data.title;
         }
@@ -105,6 +135,29 @@ const Mutation = {
         }
         if (typeof data.published !== 'undefined') {
             db.posts[postIndex].published = data.published;
+
+            if (originalPost.published && !db.posts[postIndex].published) {
+                pubsub.publish('post', {
+                    post: {
+                        mutation: 'UNPUBLISHED',
+                        data: db.posts[postIndex],
+                    },
+                });
+            } else if (!originalPost.published && db.posts[postIndex].published) {
+                pubsub.publish('post', {
+                    post: {
+                        mutation: 'PUBLISHED',
+                        data: db.posts[postIndex],
+                    },
+                });
+            } else if (db.posts[postIndex].published) {
+                pubsub.publish('post', {
+                    post: {
+                        mutation: 'UPDATED',
+                        data: db.posts[postIndex],
+                    },
+                });
+            }
         }
         return db.posts[postIndex];
     },
