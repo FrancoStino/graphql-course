@@ -1,13 +1,12 @@
 import { GraphQLError } from 'graphql';
 import { v4 as uuidv4 } from 'uuid';
 
-// Goal: Setup CREATED, UPDATED, and DELETED for comment subscription
+// Enum
+// 1. A special Type thats defines a set constants.
+// 2. This type can then be used as the type for a field (similar to scalar and custom object types).
+// 3. Values for the field must be one of the constants for the type.
 
-// 1. Set up a custom payload type for comment subscription with "mutation" and "data"
-// 2. Update publish call in createdComment to send back CREATED with the data
-// 3. Add publish call in deleteComment using DELETED event
-// 4. Add publish call in updatedComment using UPDATED
-// 5. Test you work by creating, updating, and deleting a comment
+// UseRole - standard, editor, admin
 
 const Mutation = {
     createUser(parent, args, { db }, info) {
