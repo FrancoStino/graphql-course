@@ -1,7 +1,13 @@
 import { GraphQLError } from 'graphql';
 import { v4 as uuidv4 } from 'uuid';
 
-// Goal: Set up a mutation for updating a comment
+// Goal: Setup CREATED, UPDATED, and DELETED for comment subscription
+
+// 1. Set up a custom payload type for comment subscription with "mutation" and "data"
+// 2. Update publish call in createdComment to send back CREATED with the data
+// 3. Add publish call in deleteComment using DELETED event
+// 4. Add publish call in updatedComment using UPDATED
+// 5. Test you work by creating, updating, and deleting a comment
 
 const Mutation = {
     createUser(parent, args, { db }, info) {
@@ -178,19 +184,28 @@ const Mutation = {
         };
         db.comments.push(comment);
         pubsub.publish(`comment ${args.data.post}`, {
-            comment,
+            comment: {
+                mutation: 'CREATED',
+                data: comment,
+            },
         });
         return comment;
     },
-    deleteComment(parent, args, { db }, info) {
+    deleteComment(parent, args, { db, pubsub }, info) {
         const commentIndex = db.comments.findIndex((comment) => comment.id === args.id);
         if (commentIndex === -1) {
             throw new GraphQLError('Comment not found');
         }
         const deletedComment = db.comments.splice(commentIndex, 1);
+        pubsub.publish(`comment ${deletedComment[0].post}`, {
+            comment: {
+                mutation: 'DELETED',
+                data: deletedComment[0],
+            },
+        });
         return deletedComment[0];
     },
-    updateComment(parent, args, { db }, info) {
+    updateComment(parent, args, { db, pubsub }, info) {
         const { id, data } = args;
         const commentIndex = db.comments.findIndex((comment) => comment.id === id);
         if (commentIndex === -1) {
@@ -199,6 +214,12 @@ const Mutation = {
         if (typeof data.text === 'string') {
             db.comments[commentIndex].text = data.text;
         }
+        pubsub.publish(`comment ${db.comments[commentIndex].post}`, {
+            comment: {
+                mutation: 'UPDATED',
+                data: db.comments[commentIndex],
+            },
+        });
         return db.comments[commentIndex];
     },
 };
