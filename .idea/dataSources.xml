@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="Aiven for PostgreSQL" uuid="ce954058-5917-4916-87a5-7f81e2036c0d">
+    <data-source source="LOCAL" name="GraphQL Course - Aiven for PostgreSQL" uuid="ce954058-5917-4916-87a5-7f81e2036c0d">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
