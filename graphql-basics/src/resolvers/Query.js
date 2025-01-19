@@ -1,39 +1,43 @@
 const Query = {
-    users(parent, args, { db }, info) {
+    async users(parent, args, { prisma }, info) {
         if (!args.query) {
-            return db.users;
+            return prisma.user.findMany();
         }
-        return db.users.filter((user) => {
-            return user.name.toLowerCase().includes(args.query.toLowerCase());
+        return prisma.user.findMany({
+            where: {
+                name: {
+                    contains: args.query,
+                    mode: 'insensitive'
+                }
+            }
         });
     },
-    posts(parent, args, { db }, info) {
+    async posts(parent, args, { prisma }, info) {
         if (!args.query) {
-            return db.posts;
+            return prisma.post.findMany();
         }
-        return db.posts.filter((post) => {
-            const isTitleMatch = post.title.toLowerCase().includes(args.query.toLowerCase());
-            const isBodyMatch = post.body.toLowerCase().includes(args.query.toLowerCase());
-            return isTitleMatch || isBodyMatch;
+        return prisma.post.findMany({
+            where: {
+                OR: [
+                    {
+                        title: {
+                            contains: args.query,
+                            mode: 'insensitive'
+                        }
+                    },
+                    {
+                        body: {
+                            contains: args.query,
+                            mode: 'insensitive'
+                        }
+                    }
+                ]
+            }
         });
     },
-    me() {
-        return {
-            id: '123098',
-            name: 'Mike',
-            email: 'mike@example.com',
-        };
-    },
-    post() {
-        return {
-            id: '092',
-            title: 'GraphQL 101',
-            body: '',
-            published: false,
-        };
-    },
-    comments(parent, args, { db }, info) {
-        return db.comments;
-    },
+    async comments(parent, args, { prisma }, info) {
+        return prisma.comment.findMany();
+    }
 };
+
 export { Query as default };

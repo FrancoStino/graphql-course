@@ -1,226 +1,245 @@
 import { GraphQLError } from 'graphql';
-import { v4 as uuidv4 } from 'uuid';
-
-// Enum
-// 1. A special Type thats defines a set constants.
-// 2. This type can then be used as the type for a field (similar to scalar and custom object types).
-// 3. Values for the field must be one of the constants for the type.
-
-// UseRole - standard, editor, admin
 
 const Mutation = {
-    createUser(parent, args, { db }, info) {
-        const emailTaken = db.users.some((user) => user.email === args.data.email);
+    async createUser(parent, args, { prisma }, info) {
+        const emailTaken = await prisma.user.findUnique({
+            where: { email: args.data.email }
+        });
+
         if (emailTaken) {
             throw new GraphQLError('Email already in use');
         }
-        const user = {
-            id: uuidv4(),
-            ...args.data,
-        };
 
-        db.users.push(user);
-        return user;
-    },
-    deleteUser(parent, args, { db }, info) {
-        const userIndex = db.users.findIndex((user) => user.id === args.id);
-
-        if (userIndex === -1) {
-            throw new GraphQLError('User not found');
-        }
-
-        const deletedUsers = db.users.splice(userIndex, 1);
-
-        db.posts = db.posts.filter((post) => {
-            const match = post.author === args.id;
-
-            if (match) {
-                db.comments = db.comments.filter((comment) => comment.post !== post.id);
+        return prisma.user.create({
+            data: {
+                ...args.data
             }
+        });
+    },
 
-            return !match;
+    async deleteUser(parent, args, { prisma }, info) {
+        const userExists = await prisma.user.findUnique({
+            where: { id: args.id }
         });
 
-        db.comments = db.comments.filter((comment) => comment.author !== args.id);
-
-        return deletedUsers[0];
-    },
-    updateUser(parent, args, { db }, info) {
-        const { id, data } = args;
-        const userIndex = db.users.findIndex((user) => user.id === id);
-        const user = db.users[userIndex];
-
-        if (userIndex === -1) {
-            throw new GraphQLError('User not found');
-        }
-
-        if (typeof data.email === 'string') {
-            const emailTaken = db.users.some((user) => user.email === data.email);
-            if (emailTaken) {
-                throw new GraphQLError('Email already in use');
-            }
-            db.users[userIndex].email = data.email;
-        }
-
-        if (typeof data.name === 'string') {
-            db.users[userIndex].name = data.name;
-        }
-        if (typeof data.age !== 'undefined') {
-            db.users[userIndex].age = data.age;
-        }
-        return db.users[userIndex];
-    },
-    createPost(parent, args, { db, pubsub }, info) {
-        const userExists = db.users.some((user) => user.id === args.data.author);
         if (!userExists) {
             throw new GraphQLError('User not found');
         }
-        const post = {
-            id: uuidv4(),
-            ...args.data,
-        };
-        db.posts.push(post);
+
+        return prisma.user.delete({
+            where: { id: args.id }
+        });
+    },
+
+    async updateUser(parent, args, { prisma }, info) {
+        const { id, data } = args;
+
+        if (data.email) {
+            const emailTaken = await prisma.user.findUnique({
+                where: { email: data.email }
+            });
+
+            if (emailTaken && emailTaken.id !== id) {
+                throw new GraphQLError('Email already in use');
+            }
+        }
+
+        return prisma.user.update({
+            where: { id },
+            data
+        });
+    },
+
+    async createPost(parent, args, { prisma, pubsub }, info) {
+        const userExists = await prisma.user.findUnique({
+            where: { id: args.data.author }
+        });
+
+        if (!userExists) {
+            throw new GraphQLError('User not found');
+        }
+
+        const post = await prisma.post.create({
+            data: {
+                title: args.data.title,
+                body: args.data.body,
+                published: args.data.published,
+                author: {
+                    connect: { id: args.data.author }
+                }
+            }
+        });
+
         if (post.published) {
             pubsub.publish('post', {
                 post: {
                     mutation: 'CREATED',
-                    data: post,
-                },
+                    data: post
+                }
             });
         }
+
         return post;
     },
-    deletePost(parent, args, { db, pubsub }, info) {
-        const postIndex = db.posts.findIndex((post) => post.id === args.id);
-        if (postIndex === -1) {
+
+    async deletePost(parent, args, { prisma, pubsub }, info) {
+        const post = await prisma.post.findUnique({
+            where: { id: args.id }
+        });
+
+        if (!post) {
             throw new GraphQLError('Post not found');
         }
-        const [deletedPost] = db.posts.splice(postIndex, 1);
-        db.comments = db.comments.filter((comment) => comment.post !== args.id);
+
+        const deletedPost = await prisma.post.delete({
+            where: { id: args.id }
+        });
 
         if (deletedPost.published) {
             pubsub.publish('post', {
                 post: {
                     mutation: 'DELETED',
-                    data: deletedPost,
-                },
+                    data: deletedPost
+                }
             });
         }
+
         return deletedPost;
     },
 
-    // Updates an existing post in the database.
-
-    // Parameters:
-    // - `parent`: The parent resolver object (not used)
-    // - `args`: An object containing the post ID and the updated data for the post
-    // - `{ db, pubsub }`: An object containing the database and the PubSub instance
-    // - `info`: The GraphQL resolver info object (not used)
-
-    // The function first finds the index of the post in the `db.posts` array using the provided post ID. If the post is not found, it throws a `GraphQLError` with the message "Post not found".
-
-    // The function then checks if the `data.title`, `data.body`, or `data.published` properties are provided, and updates the corresponding fields in the post object. If the `published` status of the post changes, the function publishes a `'post'` event with the appropriate mutation type (`'UNPUBLISHED'` or `'PUBLISHED'`).
-
-    // If the post is published and any of the fields are updated, the function publishes a `'post'` event with the `'UPDATED'` mutation type.
-
-    // Finally, the function returns the updated post object.
-    updatePost(parent, args, { db, pubsub }, info) {
+    async updatePost(parent, args, { prisma, pubsub }, info) {
         const { id, data } = args;
-        const postIndex = db.posts.findIndex((post) => post.id === id);
-        if (postIndex === -1) {
+
+        const originalPost = await prisma.post.findUnique({
+            where: { id }
+        });
+
+        if (!originalPost) {
             throw new GraphQLError('Post not found');
         }
-        const originalPost = { ...db.posts[postIndex] };
 
-        if (typeof data.title === 'string') {
-            db.posts[postIndex].title = data.title;
-        }
-        if (typeof data.body === 'string') {
-            db.posts[postIndex].body = data.body;
-        }
+        const updatedPost = await prisma.post.update({
+            where: { id },
+            data
+        });
+
         if (typeof data.published !== 'undefined') {
-            db.posts[postIndex].published = data.published;
-
-            if (originalPost.published && !db.posts[postIndex].published) {
+            if (originalPost.published && !updatedPost.published) {
                 pubsub.publish('post', {
                     post: {
                         mutation: 'UNPUBLISHED',
-                        data: db.posts[postIndex],
-                    },
+                        data: updatedPost
+                    }
                 });
-            } else if (!originalPost.published && db.posts[postIndex].published) {
+            } else if (!originalPost.published && updatedPost.published) {
                 pubsub.publish('post', {
                     post: {
                         mutation: 'PUBLISHED',
-                        data: db.posts[postIndex],
-                    },
-                });
-            } else if (db.posts[postIndex].published) {
-                pubsub.publish('post', {
-                    post: {
-                        mutation: 'UPDATED',
-                        data: db.posts[postIndex],
-                    },
+                        data: updatedPost
+                    }
                 });
             }
+        } else if (updatedPost.published) {
+            pubsub.publish('post', {
+                post: {
+                    mutation: 'UPDATED',
+                    data: updatedPost
+                }
+            });
         }
-        return db.posts[postIndex];
+
+        return updatedPost;
     },
-    createComment(parent, args, { db, pubsub }, info) {
-        const userExists = db.users.some((user) => user.id === args.data.author);
-        const postExists = db.posts.some((post) => post.id === args.data.post && post.published);
+
+    async createComment(parent, args, { prisma, pubsub }, info) {
+        const [userExists, postExists] = await Promise.all([
+            prisma.user.findUnique({ where: { id: args.data.author } }),
+            prisma.post.findFirst({
+                where: {
+                    id: args.data.post,
+                    published: true
+                }
+            })
+        ]);
 
         if (!userExists) {
             throw new GraphQLError('User not found');
         }
 
         if (!postExists) {
-            throw new GraphQLError('Post not found');
+            throw new GraphQLError('Post not found or not published');
         }
-        const comment = {
-            id: uuidv4(),
-            ...args.data,
-        };
-        db.comments.push(comment);
+
+        const comment = await prisma.comment.create({
+            data: {
+                text: args.data.text,
+                author: {
+                    connect: { id: args.data.author }
+                },
+                post: {
+                    connect: { id: args.data.post }
+                }
+            }
+        });
+
         pubsub.publish(`comment ${args.data.post}`, {
             comment: {
                 mutation: 'CREATED',
-                data: comment,
-            },
+                data: comment
+            }
         });
+
         return comment;
     },
-    deleteComment(parent, args, { db, pubsub }, info) {
-        const commentIndex = db.comments.findIndex((comment) => comment.id === args.id);
-        if (commentIndex === -1) {
+
+    async deleteComment(parent, args, { prisma, pubsub }, info) {
+        const comment = await prisma.comment.findUnique({
+            where: { id: args.id }
+        });
+
+        if (!comment) {
             throw new GraphQLError('Comment not found');
         }
-        const deletedComment = db.comments.splice(commentIndex, 1);
-        pubsub.publish(`comment ${deletedComment[0].post}`, {
+
+        const deletedComment = await prisma.comment.delete({
+            where: { id: args.id }
+        });
+
+        pubsub.publish(`comment ${deletedComment.postId}`, {
             comment: {
                 mutation: 'DELETED',
-                data: deletedComment[0],
-            },
+                data: deletedComment
+            }
         });
-        return deletedComment[0];
+
+        return deletedComment;
     },
-    updateComment(parent, args, { db, pubsub }, info) {
+
+    async updateComment(parent, args, { prisma, pubsub }, info) {
         const { id, data } = args;
-        const commentIndex = db.comments.findIndex((comment) => comment.id === id);
-        if (commentIndex === -1) {
+
+        const comment = await prisma.comment.findUnique({
+            where: { id }
+        });
+
+        if (!comment) {
             throw new GraphQLError('Comment not found');
         }
-        if (typeof data.text === 'string') {
-            db.comments[commentIndex].text = data.text;
-        }
-        pubsub.publish(`comment ${db.comments[commentIndex].post}`, {
+
+        const updatedComment = await prisma.comment.update({
+            where: { id },
+            data
+        });
+
+        pubsub.publish(`comment ${updatedComment.postId}`, {
             comment: {
                 mutation: 'UPDATED',
-                data: db.comments[commentIndex],
-            },
+                data: updatedComment
+            }
         });
-        return db.comments[commentIndex];
-    },
+
+        return updatedComment;
+    }
 };
 
 export { Mutation as default };

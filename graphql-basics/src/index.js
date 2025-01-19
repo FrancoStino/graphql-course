@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import { createSchema, createYoga, createPubSub } from 'graphql-yoga';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import db from './db.js';
+import { prisma } from './prisma.js';
 import Query from './resolvers/Query.js';
 import Mutation from './resolvers/Mutation.js';
 import Subscription from './resolvers/Subscription.js';
@@ -24,14 +24,14 @@ const resolvers = {
     Comment,
 };
 
-// Creazione dell'istanza GraphQL Yoga
+// Create GraphQL Yoga instance
 const yoga = createYoga({
     schema: createSchema({
         typeDefs,
         resolvers,
     }),
     context: {
-        db,
+        prisma,
         pubsub,
     },
     graphiql: {
@@ -53,12 +53,20 @@ const yoga = createYoga({
         //   }
         // `,
     },
+    landingPage: true,
+    cors: true,
+
+    subscriptions: {
+        enabled: true,
+    },
 });
 
 // Creazione del server HTTP
 const server = createServer(yoga);
 
-// Avvio del server sulla porta 4000
-server.listen(4000, () => {
-    console.info('Server is running on http://localhost:4000/graphql');
+// Start both servers
+server.listen(4000, async () => {
+    console.info('🚀 Server is running on http://localhost:4000');
+    console.info('📊 GraphQL API endpoint: http://localhost:4000');
+    console.info('🔌 WebSocket subscriptions endpoint: ws://localhost:4000');
 });
